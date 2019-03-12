@@ -11,5 +11,5 @@ y dos archivos auxiliares.
 En la carpeta Imágenes se encuentran todas las imágenes de aguacates utilizadas en el proyecto.
 
 En la carpeta Resultados se encuentra dos archivos, uno contienen las gráficos resultantes del algoritmo
-en cada aguacat y el segundo las gráficas del aguacate y sus defectos resaltados en amarillo. Además contiene
+en cada aguacate y el segundo las gráficas del aguacate y sus defectos resaltados en amarillo. Además contiene
 una tabla de resultados con los datos de cada aguacate.
