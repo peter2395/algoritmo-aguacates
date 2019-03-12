@@ -1,5 +1,4 @@
 # algoritmo-aguacates
-Algoritmo de clasificación de aguacates basado en visión por computadora
 
 En este repositorio se encuentra los códigos, imágenes y los resultados del trabajo de grado titulado
 "Clasificación de aguacates basado en visión por computadora" realizado en el software MATLAB versión
