@@ -2,6 +2,7 @@ clc;
 clear all;
 agCarT=table();
 contador=1;
+figure(1)
 while contador<=231
     
     %% Adquisicion de imagen del aguacate   
@@ -44,7 +45,7 @@ while contador<=231
     agBin=imerode(agBin,ES);                        % estructural tipo disco radio 20
 
     [etag,numag] = bwlabel(agBin,4);                % Etiquetado
-    agCar2 = regionprops('table',etag,'Area');      % Calculo del area en pixeles del aguacate
+    agCar2 = regionprops('table',etag,'Area');      % Calculo del ?rea en pixeles del aguacate
 
     agPix=agCar2{1,1};
     agCar.AreaPixeles=agPix;
@@ -112,15 +113,16 @@ while contador<=231
         for(j=1:mG)
             pixel=agGnew(j,i);
             if(pixel<=90)
-                agGnewBin(j,i)=0;
-            else
                 agGnewBin(j,i)=1;
+            else
+                agGnewBin(j,i)=0;
             end
         end
     end
 
-    agGnewBin=agGnewBin|(~agBin*1);
-    agGPix=sum(~agGnewBin(:));                      % Calculo del area de los defectos del 
+    agGnewBin=agGnewBin&(agBin);
+   
+    agGPix=sum(agGnewBin(:));                       % Calculo del area de los defectos del 
                                                     % aguacate en el componente verde
     
     agRnewBin=double(agRnew);                       % Segmentacion de los defectos del 
@@ -129,14 +131,14 @@ while contador<=231
         for(j=1:mR)
             pixel=agRnew(j,i);
             if(pixel>=180)
-                agRnewBin(j,i)=0;
-            else
                 agRnewBin(j,i)=1;
+            else
+                agRnewBin(j,i)=0;
             end
         end
     end
-
-    agRPix=sum(~agRnewBin(:));                      % Calculo del area de los defectos del 
+    
+    agRPix=sum(agRnewBin(:));                       % Calculo del area de los defectos del 
                                                     % aguacate en el componente rojo
                                                     
     %% Analisis de color L*a*b
@@ -153,14 +155,15 @@ while contador<=231
         for(j=1:mB)
             pixel=agB2(j,i);
             if(pixel<=25)
-                agB2newBin(j,i)=0;
-            else
                 agB2newBin(j,i)=1;
+            else
+                agB2newBin(j,i)=0;
             end
         end
     end
-    agB2newBin=agB2newBin+(~agBin*1);
-    agB2Pix=sum(~agB2newBin(:));                    % Calculo del area de los defectos del 
+    agB2newBin=agB2newBin&(agBin);
+    
+    agB2Pix=sum(agB2newBin(:));                     % Calculo del area de los defectos del 
                                                     % aguacate en el canal b*
     
     agAnewBin=double(agA);                          % Segmentacion de los defectos del 
@@ -169,39 +172,42 @@ while contador<=231
         for(j=1:mA)
             pixel=agA(j,i);
             if(pixel<=-15)
-                agAnewBin(j,i)=1;
-            else
                 agAnewBin(j,i)=0;
+            else
+                agAnewBin(j,i)=1;
             end
         end
     end
-    agAnewBin=agAnewBin+(~agBin*1);
-    agAPix=sum(~agAnewBin(:));                      % Calculo del area de los defectos del
+    
+    agAnewBin=agAnewBin&(agBin);
+
+    agAPix=sum(agAnewBin(:));                       % Calculo del area de los defectos del
                                                     % aguacate en el canal a*
 
     %% Analisis de color en defectos
 
-    agDef=~agRnewBin|~agGnewBin;                    % Suma de los componentes rojo y verde
+    agDef=agRnewBin|agGnewBin;                      % Suma de los componentes rojo y verde
 
     if agAPix<=(agPix*0.15)                         % Operaciones entre los canales a* y b*
-        agDef2=~agB2newBin&~agAnewBin;
+        agDef2=agB2newBin&agAnewBin;
     else
-        agDef2=~agB2newBin|~agAnewBin;
+        agDef2=agB2newBin|agAnewBin;
     end
 
     agDef3=agDef&agDef2;                            % Producto entre los defectos RG y a*b*
     agDef4=agDef3;
 
     if agAPix<=(agPix*0.1)                          % Elimina problemas de iluminacion  
-        agDef4=agDef3&agRnewBin;
+        agDef4=agDef3&~agRnewBin;
     end
 
-    if agRPix>=(agPix*0.3)                          % A?ade defectos por decoloracion
-        agDef4=agDef3|~agRnewBin;
+    if agRPix>=(agPix*0.3)                          % Anade defectos por decoloracion
+        agDef4=agDef3|agRnewBin;
     end
 
 
-    agDefPix=sum(agDef3(:));                        % Calculo del area de los defectos del 
+        
+    agDefPix=sum(agDef4(:));                        % Calculo del area de los defectos del 
                                                     % aguacate
                                                     
     Defecto=agDefPix/agPix;                         % Porcentaje de los defectos presentes 
@@ -248,7 +254,7 @@ while contador<=231
     for i=1:nAgDef4
         for j=1:mAgDef4
             pixel=agDef4(j,i);
-            if(pixel>0)
+            if(pixel==1)
                 ag2(j,i,1)=255;
                 ag2(j,i,2)=255;
                 ag2(j,i,3)=0;
@@ -258,7 +264,7 @@ while contador<=231
 
     figure(1)
     subplot(1,3,1),imshow(ag),title(strcat('Aguacate-',numAg(1,1)));
-    subplot(1,3,2),imshow(~agDef4),title('Defectos detectados por el algoritmo');
+    subplot(1,3,2),imshow(agDef4),title('Defectos detectados por el algoritmo');
     subplot(1,3,3),imshow(ag2),title(strcat('Defectos del aguacate resaltados'));
 
 
@@ -268,18 +274,18 @@ while contador<=231
     subplot(3,5,7),imshow(agRnewBin),title('Segmentacion rojo');
     subplot(3,5,5),imshow(agA,[-75 75]),title('Componente a*');
     subplot(3,5,9),imshow(agAnewBin),title('Segmentacion a*');
-    subplot(3,5,11),imshow(~agDef),title('Defectos (rojo || verde)');
-    subplot(3,5,13),imshow(~agDef3),title('Defectos RG & a*b*');
+    subplot(3,5,11),imshow(agDef),title('Defectos (rojo || verde)');
+    subplot(3,5,13),imshow(agDef3),title('Defectos RG & a*b*');
     subplot(3,5,2),imshow(agNew),title(strcat('Aguacate-',numAg(1,1)));
     subplot(3,5,4),imshow(agGnew),title('Componente verde');
     subplot(3,5,8),imshow(agGnewBin),title('Segmentacion verde');
     subplot(3,5,6),imshow(agB2,[-75 75]),title('Componente b*');
     subplot(3,5,10),imshow(agB2newBin),title('Segmentacion b*');
-    subplot(3,5,12),imshow(~agDef2),title('Defectos entre a* y b*');
-    subplot(3,5,14),imshow(~agDef4),title('Defectos detectados');
+    subplot(3,5,12),imshow(agDef2),title('Defectos entre a* y b*');
+    subplot(3,5,14),imshow(agDef4),title('Defectos detectados');
     subplot(3,5,15),imshow(ag2),title(strcat('Defectos resaltados'));
 
-    pause;
+   pause;
     contador=contador+1;
     agCarT=[agCarT;agCar];
 end
